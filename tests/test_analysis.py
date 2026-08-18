@@ -212,7 +212,7 @@ def test_calculate_beta_from_prices(
     )
 
 
-def test_calculate_asset_beta_from_prices(
+def test_observed_return_is_calculated_without_capm(
     test_data
 ):
     asset_prices, market_prices = test_data
@@ -220,6 +220,16 @@ def test_calculate_asset_beta_from_prices(
     result = analysis.calculate_asset_beta_from_prices(
         asset_prices,
         market_prices
+    )
+
+    expected_return = (
+        asset_prices["Close"].iloc[-1]
+        / asset_prices["Close"].iloc[0]
+        - 1
+    )
+
+    assert result["observed_return"] == pytest.approx(
+        expected_return
     )
 
     assert result["beta"] == pytest.approx(
@@ -240,3 +250,41 @@ def test_calculate_asset_beta_from_prices(
     assert result["r_squared"] > 0.99
 
     assert result["observations"] > 700
+
+def test_calculate_asset_beta_with_capm(
+    mock_download_prices
+):
+    result = analysis.calculate_asset_beta(
+        "ASSET",
+        "MARKET",
+        "2021-01-01",
+        "2023-11-30",
+        risk_free_rate=0.04,
+        market_expected_return=0.10
+    )
+
+    assert result["beta_regression"] == pytest.approx(
+        1.5,
+        abs=0.02
+    )
+
+    assert result["expected_return"] == pytest.approx(
+        0.13,
+        abs=0.001
+    )
+
+def test_calculate_asset_beta_capm_interpretation(
+    mock_download_prices
+):
+    result = analysis.calculate_asset_beta(
+        "ASSET",
+        "MARKET",
+        "2021-01-01",
+        "2023-11-30",
+        risk_free_rate=0.04,
+        market_expected_return=0.10
+    )
+
+    assert result["capm_interpretation"] == (
+        "Observed return was above the CAPM expected return."
+    )

@@ -1,11 +1,18 @@
 import argparse
 import pandas as pd
 
-from src.analysis import calculate_asset_beta, compare_frequencies
+from src.analysis import (
+    calculate_asset_beta_from_prices,
+    compare_frequencies,
+)
 from src.data import download_prices, calculate_returns
 from src.plots import plot_frequency_comparison, plot_regression
 from src.reports import generate_economic_interpretation
-from src.tickers import IBOVESPA_TICKERS, MARKET_BENCHMARKS, SP500_TICKERS
+from src.tickers import (
+    IBOVESPA_TICKERS,
+    MARKET_BENCHMARKS,
+    SP500_TICKERS,
+)
 
 
 def run_single_pipeline(
@@ -19,7 +26,9 @@ def run_single_pipeline(
         f"{asset_ticker} vs {market_ticker}..."
     )
 
-    print("📥 [1/5] Baixando e processando histórico de dados...")
+    print(
+        "📥 [1/5] Baixando e processando histórico de dados..."
+    )
 
     asset_prices = download_prices(
         asset_ticker,
@@ -64,11 +73,9 @@ def run_single_pipeline(
         "Beta OLS, Alpha e R²..."
     )
 
-    analysis = calculate_asset_beta(
-        asset_ticker,
-        market_ticker,
-        start_date,
-        end_date,
+    analysis = calculate_asset_beta_from_prices(
+        asset_prices,
+        market_prices,
         frequency="daily"
     )
 
@@ -96,7 +103,10 @@ def run_single_pipeline(
         save_path=None,
     )
 
-    print("📝 [4/5] Compilando relatório de interpretação econômica...")
+    print(
+        "📝 [4/5] Compilando relatório "
+        "de interpretação econômica..."
+    )
 
     report_text = generate_economic_interpretation(
         analysis,
@@ -107,9 +117,16 @@ def run_single_pipeline(
     print("\n" + report_text)
 
     print("📊 [5/5] Análise concluída.")
-    print(f"   Observações utilizadas: {analysis['observations']}")
-    print(f"   Gráfico de regressão: {reg_plot}")
-    print(f"   Comparação de frequência: {freq_plot}")
+    print(
+        f"   Observações utilizadas: "
+        f"{analysis['observations']}"
+    )
+    print(
+        f"   Gráfico de regressão: {reg_plot}"
+    )
+    print(
+        f"   Comparação de frequência: {freq_plot}"
+    )
 
 
 def run_batch_analysis(
@@ -137,11 +154,17 @@ def run_batch_analysis(
 
     for ticker in tickers:
         try:
-            res = calculate_asset_beta(
-                ticker,
-                market,
-                start_date,
-                end_date,
+            res = calculate_asset_beta_from_prices(
+                download_prices(
+                    ticker,
+                    start_date,
+                    end_date
+                ),
+                download_prices(
+                    market,
+                    start_date,
+                    end_date
+                ),
                 frequency="daily"
             )
 
@@ -179,7 +202,9 @@ def run_batch_analysis(
     )
 
     print("\n📊 Ranking calculado:")
-    print(df_results.to_string(index=False))
+    print(
+        df_results.to_string(index=False)
+    )
 
     return df_results
 
@@ -240,15 +265,28 @@ if __name__ == "__main__":
                 start_date=args.start,
                 end_date=args.end,
             )
+
     except ValueError as e:
         print("\n" + "=" * 70)
         print("❌ ERRO NA EXECUÇÃO DO PIPELINE DE DADOS")
         print("=" * 70)
         print(f"Mensagem: {e}")
         print("\n💡 Dicas para resolver:")
-        print(" 1. Verifique se o ticker possui o sufixo correto (ex: '.SA' para ações brasileiras).")
-        print(" 2. Verifique se o período selecionado contém dias úteis de negociação.")
-        print(" 3. Confirme se há interseção de datas válidas entre o ativo e o índice de mercado.")
+        print(
+            " 1. Verifique se o ticker possui o sufixo correto "
+            "(ex: '.SA' para ações brasileiras)."
+        )
+        print(
+            " 2. Verifique se o período selecionado contém "
+            "dias úteis de negociação."
+        )
+        print(
+            " 3. Confirme se há interseção de datas válidas "
+            "entre o ativo e o índice de mercado."
+        )
         print("=" * 70 + "\n")
+
     except Exception as e:
-        print(f"\n❌ Ocorreu um erro inesperado: {e}\n")
+        print(
+            f"\n❌ Ocorreu um erro inesperado: {e}\n"
+        )

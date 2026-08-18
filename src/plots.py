@@ -11,23 +11,27 @@ def plot_regression(
     market_ticker,
     save_path=None,
 ):
-    """Gera o scatter plot dos retornos com a linha de regressão OLS."""
+    """
+    Generate a scatter plot of asset and market returns
+    with the OLS regression line.
+    """
 
     sns.set_theme(style="whitegrid")
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    # Dispersão dos retornos
+    # Scatter plot of returns
     ax.scatter(
         combined_returns["market"],
         combined_returns["asset"],
         alpha=0.5,
         color="#1f77b4",
         edgecolors="none",
-        label="Retornos",
+        label="Returns",
     )
 
-    # Linha de regressão:
+    # OLS regression line:
+    #
     # R_asset = Alpha + Beta * R_market
     x_vals = np.array(
         [
@@ -43,25 +47,26 @@ def plot_regression(
         y_vals,
         color="#d62728",
         linewidth=2,
-        label=f"Reta de Regressão (Beta = {beta_regression:.2f})",
+        label=f"OLS Regression (Beta = {beta_regression:.2f})",
     )
 
     ax.set_title(
-        f"Regressão Linear: {asset_ticker} vs {market_ticker}",
+        f"Linear Regression: {asset_ticker} vs {market_ticker}",
         fontsize=14,
         pad=15,
     )
 
     ax.set_xlabel(
-        f"Retornos do Mercado ({market_ticker})",
+        f"Market Returns ({market_ticker})",
         fontsize=11,
     )
 
     ax.set_ylabel(
-        f"Retornos do Ativo ({asset_ticker})",
+        f"Asset Returns ({asset_ticker})",
         fontsize=11,
     )
 
+    # Reference lines
     ax.axhline(
         0,
         color="black",
@@ -82,9 +87,16 @@ def plot_regression(
 
     plt.tight_layout()
 
-    # Só salva se o usuário/programa fornecer explicitamente um caminho.
+    # Save only when explicitly requested.
     if save_path is not None:
-        fig.savefig(save_path, dpi=300)
+        fig.savefig(
+            save_path,
+            dpi=300,
+            bbox_inches="tight",
+        )
+
+    # Display the figure.
+    plt.show()
 
     return fig
 
@@ -94,11 +106,14 @@ def plot_frequency_comparison(
     asset_ticker,
     save_path=None,
 ):
-    """Gera um gráfico comparando o Beta por frequência."""
+    """
+    Generate a chart comparing Beta across frequencies.
+    """
 
     sns.set_theme(style="whitegrid")
 
     freqs = list(frequency_results.keys())
+
     betas = [
         frequency_results[frequency]["beta"]
         for frequency in freqs
@@ -114,33 +129,42 @@ def plot_frequency_comparison(
     )
 
     ax.set_title(
-        f"Sensibilidade do Beta por Frequência - {asset_ticker}",
+        f"Beta Sensitivity by Frequency - {asset_ticker}",
         fontsize=13,
         pad=15,
     )
 
-    ax.set_ylabel(
-        "Valor do Beta",
+    ax.set_xlabel(
+        "Frequency",
         fontsize=11,
     )
 
+    ax.set_ylabel(
+        "Beta",
+        fontsize=11,
+    )
+
+    # Neutral Beta reference
     ax.axhline(
         1.0,
         color="red",
         linestyle="--",
         linewidth=1,
-        label="Beta Neutro = 1.0",
+        label="Neutral Beta = 1.0",
     )
 
+    # Beta values above the bars
     for bar in bars:
         yval = bar.get_height()
 
+        offset = 0.02 if yval >= 0 else -0.05
+
         ax.text(
             bar.get_x() + bar.get_width() / 2.0,
-            yval + 0.02,
+            yval + offset,
             f"{yval:.2f}",
             ha="center",
-            va="bottom",
+            va="bottom" if yval >= 0 else "top",
             fontsize=10,
             fontweight="bold",
         )
@@ -149,8 +173,15 @@ def plot_frequency_comparison(
 
     plt.tight_layout()
 
-    # Só salva se o usuário/programa fornecer explicitamente um caminho.
+    # Save only when explicitly requested.
     if save_path is not None:
-        fig.savefig(save_path, dpi=300)
+        fig.savefig(
+            save_path,
+            dpi=300,
+            bbox_inches="tight",
+        )
+
+    # Display the figure.
+    plt.show()
 
     return fig
